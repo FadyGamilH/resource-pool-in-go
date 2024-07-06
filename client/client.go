@@ -25,20 +25,20 @@ const (
 )
 
 const (
-	maxNumberOfRequestsPerClient = 100
+	maxNumberOfRequestsPerClient = 10000
 	maxBatchSize                 = (maxNumberOfRequestsPerClient / 10) * 2 // 20 percent of the max number of requests per client will be the max number of msgs per batch, we might send less than that of course
 )
 
 const MaxReqDataSize = 1 * 1024 // kb of data per request is the max request size
 
 type Request struct {
-	Id   int
-	Type int
-	Data [MaxReqDataSize]byte // slice of 1 KB of bytes
-	Size int                  // the size of our actual data that we sent of the Data [] we might send less than 1KB
+	Id   int                  `json:"id"`
+	Type int                  `json:"type"`
+	Data [MaxReqDataSize]byte `json:"data"` // slice of 1 KB of bytes
+	Size int                  `json:"size"` // the size of our actual data that we sent of the Data [] we might send less than 1KB
 }
 
-func EncodeStructToJson(req *Request) io.Reader {
+func EncodeStructToJson(req *Request) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	// create an encoder initialized by this buffer
 	enc := json.NewEncoder(buf)
@@ -70,12 +70,24 @@ func SendRequestsInBatches(url string) {
 			req.Size = r.Intn(MaxReqDataSize)
 			req.Type = r.Intn(5)
 
-			buf := EncodeStructToJson(req)
-
-			res, err := http.Post(url, "text/json", buf)
+			jsonData, err := json.Marshal(req)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println("error marshling request : ", err)
 			}
+
+			// buf := EncodeStructToJson(req)
+
+			res, err := http.Post("http://localhost"+url, "application/json", bytes.NewBuffer(jsonData))
+			if err != nil {
+				log.Println("error sending request : ", err)
+			}
+
+			resBody, err := io.ReadAll(res.Body)
+			if err != nil {
+				log.Println("error reading response : ", err)
+			}
+
+			log.Printf("Response: %s", resBody)
 			defer res.Body.Close()
 		}
 
