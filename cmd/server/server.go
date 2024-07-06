@@ -4,6 +4,7 @@ import (
 	"flag"
 	"gopool/server"
 	"log"
+	"time"
 )
 
 func main() {
@@ -16,8 +17,27 @@ func main() {
 
 	srv := server.NewTcpSrv(srvUrl)
 
+	// err := srv.Start()
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+
+	StartSleepStop(srv)
+}
+
+func StartSleepStop(srv *server.TcpSrv) {
+
+	d := time.Duration(time.Second * 5)
+
 	err := srv.Start()
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	time.Sleep(d)
+
+	err = srv.StopGracefully()
+	if err != nil {
+		log.Println(err)
 	}
 }

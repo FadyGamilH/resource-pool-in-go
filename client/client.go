@@ -75,8 +75,6 @@ func SendRequestsInBatches(url string) {
 				log.Println("error marshling request : ", err)
 			}
 
-			// buf := EncodeStructToJson(req)
-
 			res, err := http.Post("http://localhost"+url, "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				log.Println("error sending request : ", err)
